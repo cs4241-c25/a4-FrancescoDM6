@@ -10,30 +10,31 @@ const port = process.env.PORT || 3000;
 
 // 1. Connect to MongoDB
 const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cs4241';
-const client = new MongoClient(uri);
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 let db;
 
 // 2. Express & Session Setup
 app.use(express.json());
 app.use(session({
-    secret: 'your_secret_here',
+    secret: 'your_secret_here', // Replace with a strong secret in production
     resave: false,
     saveUninitialized: false
 }));
 
-// 3. Dummy Auth Middleware
+// 3. Dummy Auth Middleware (for testing until real auth is implemented)
 function ensureAuthenticated(req, res, next) {
     req.user = { username: 'test' };  // Always "test" for now
     next();
 }
 
-// 4. Connect DB and Start Server
+// 4. Connect to the database and start the server
 async function connectDB() {
     try {
         await client.connect();
         db = client.db('cs4241');
         console.log('Connected to MongoDB!');
 
+        // Start the server once DB is connected
         app.listen(port, () => {
             console.log(`Server running on port ${port}`);
         });
@@ -42,13 +43,14 @@ async function connectDB() {
         process.exit(1);
     }
 }
-
 connectDB();
 
-// 5. Game Routes (with dummy auth)
+// 5. API Routes for Games (CRUD) with dummy authentication
+
+// GET /games - Retrieve games for the dummy user
 app.get('/games', ensureAuthenticated, async (req, res) => {
     try {
-        const username = req.user.username;  // "test"
+        const username = req.user.username;
         const games = await db.collection('games').find({ username }).toArray();
         res.json(games);
     } catch (err) {
@@ -56,6 +58,7 @@ app.get('/games', ensureAuthenticated, async (req, res) => {
     }
 });
 
+// POST /games - Create a new game
 app.post('/games', ensureAuthenticated, async (req, res) => {
     try {
         const game = {
@@ -77,6 +80,7 @@ app.post('/games', ensureAuthenticated, async (req, res) => {
     }
 });
 
+// PUT /games/:id - Update an existing game
 app.put('/games/:id', ensureAuthenticated, async (req, res) => {
     try {
         const id = new ObjectId(req.params.id);
@@ -103,6 +107,7 @@ app.put('/games/:id', ensureAuthenticated, async (req, res) => {
     }
 });
 
+// DELETE /games/:id - Delete a game
 app.delete('/games/:id', ensureAuthenticated, async (req, res) => {
     try {
         const id = new ObjectId(req.params.id);
@@ -118,15 +123,15 @@ app.delete('/games/:id', ensureAuthenticated, async (req, res) => {
 });
 
 // 6. Serve the React Build
-//    (Run `npm run build` inside client/ so a client/build folder exists)
+// Ensure that you run "npm run build" in your client folder to generate the client/build directory.
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// 7. Fallback to index.html for non-API routes
+// 7. Fallback: For any request that doesn't match an API route, serve the React index.html.
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-// Original playScore function
+// 8. Utility: playScore calculation (from A3)
 function calculatePlayScore(game) {
     const statusWeights = {
         'In Progress': 1.3,
