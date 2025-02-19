@@ -3,9 +3,11 @@
 // src/components/LoginForm.tsx
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -20,6 +22,10 @@ export default function LoginForm() {
 
             if (res?.error) {
                 setError('Invalid username or password');
+            } else if (res?.ok) {
+                // Successful login
+                router.push('/');
+                router.refresh(); // Refresh the page to update session state
             }
         } catch (err) {
             setError('Failed to login');
