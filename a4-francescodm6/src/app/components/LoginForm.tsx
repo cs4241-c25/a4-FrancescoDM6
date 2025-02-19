@@ -27,7 +27,8 @@ export default function LoginForm() {
                 router.push('/');
                 router.refresh(); // Refresh the page to update session state
             }
-        } catch (err) {
+        } catch (error: unknown) {
+            console.error('Login error:', error);
             setError('Failed to login');
         }
     };
@@ -77,6 +78,15 @@ export default function LoginForm() {
                     Sign In
                 </button>
             </form>
+
+            <div className="mt-6 pt-4 border-t text-center">
+                <button
+                    onClick={() => signIn('github')}
+                    className="w-full rounded-md bg-gray-800 px-4 py-2 text-white"
+                >
+                    Sign in with GitHub
+                </button>
+            </div>
 
             <div className="mt-6 pt-4 border-t text-center">
                 <div className="text-sm text-gray-500">

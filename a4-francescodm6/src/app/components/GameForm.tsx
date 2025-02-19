@@ -25,7 +25,10 @@ export default function GameForm({ onGameAdded, gameToEdit, onGameUpdated }: Gam
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!session?.user?.username) return;
+        if (!session?.user?.username) {
+            console.log('No username in session:', session);
+            return;
+        }
 
         setIsSubmitting(true);
         const form = e.currentTarget;
@@ -46,6 +49,8 @@ export default function GameForm({ onGameAdded, gameToEdit, onGameUpdated }: Gam
             status: status as GameStatus,
             priority: formData.get('priority') as string,
         };
+        console.log('Submitting game data:', gameData);
+
 
         try {
             if (gameToEdit && !gameToEdit._id) {

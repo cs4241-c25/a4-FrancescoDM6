@@ -1,15 +1,15 @@
 // src/app/api/games/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { calculatePlayScore } from '../../utils/game-utils';
+import { calculatePlayScore } from '@/app/utils/game-utils';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
-import clientPromise from '../../utils/mongodb';
-import { Game, GameFormData } from '../../types/game';
+import { authOptions } from '../../../../lib/authOptions';
+import clientPromise from '@/app/utils/mongodb';
+import { Game, GameFormData } from '@/app/types/game';
 
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.username) {
+        if (!session?.user?.name) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
             .toArray();
 
         return NextResponse.json(games);
-    } catch (err) {
+    } catch (error: unknown) {
+        console.error('Failed to fetch games:', error);
         return NextResponse.json({ error: 'Failed to fetch games' }, { status: 500 });
     }
 }
@@ -58,7 +59,8 @@ export async function POST(request: NextRequest) {
         const result = await db.collection<Game>('games').insertOne(game);
 
         return NextResponse.json({ ...game, _id: result.insertedId }, { status: 201 });
-    } catch (error) {
+    } catch (error: unknown) {
+        console.error('Failed to create game:', error);
         return NextResponse.json({ error: "Failed to create game" }, { status: 400 });
     }
 }

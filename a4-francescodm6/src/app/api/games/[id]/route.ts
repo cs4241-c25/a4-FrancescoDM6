@@ -3,21 +3,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { calculatePlayScore } from '@/app/utils/game-utils';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../../../../lib/authOptions';
 import clientPromise from '@/app/utils/mongodb';
 import { Game, GameFormData } from '@/app/types/game';
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.username) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-
-        const id = new ObjectId(params.id);
+        const { id } = await params;
+        const objectId = new ObjectId(id);
         const body = await request.json() as GameFormData;
 
         const client = await clientPromise;
@@ -25,7 +25,7 @@ export async function PUT(
 
         // Check if game belongs to user
         const existing = await db.collection('games').findOne<Game>({
-            _id: id,
+            _id: objectId,
             username: body.username
         });
 
@@ -45,27 +45,29 @@ export async function PUT(
         game.playScore = calculatePlayScore(game);
 
         await db.collection('games').updateOne(
-            { _id: id, username: body.username },
+            { _id: objectId, username: body.username },
             { $set: game }
         );
 
-        return NextResponse.json({ ...game, _id: id.toString() });
-    } catch (error) {
+        return NextResponse.json({ ...game, _id: objectId.toString() });
+    } catch (error: unknown) {
+        console.error('Failed to update game:', error);
         return NextResponse.json({ error: "Failed to update game" }, { status: 400 });
     }
 }
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.username) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        const { id } = await params;
 
-        const id = new ObjectId(params.id);
+        const objectId = new ObjectId(id);
         const username = request.nextUrl.searchParams.get('user');
 
         if (!username) {
@@ -76,16 +78,17 @@ export async function DELETE(
         const db = client.db("cs4241");
 
         const result = await db.collection('games').deleteOne({
-            _id: id,
+            _id: objectId,
             username
         });
-
+//diff
         if (result.deletedCount === 0) {
             return NextResponse.json({ error: "Game not found" }, { status: 404 });
         }
 
         return new NextResponse(null, { status: 204 });
-    } catch (error) {
+    } catch (error: unknown) {
+        console.error('Failed to delete game:', error);
         return NextResponse.json({ error: "Failed to delete game" }, { status: 400 });
     }
 }

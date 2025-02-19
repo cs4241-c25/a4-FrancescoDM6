@@ -22,9 +22,9 @@ Do the following to complete this assignment:
 Sample Readme (delete the above when you're ready to submit, and modify the below so with your links and descriptions)
 ---
 
-## Your Web Application Title
+## Your Game Backlog Manager
 
-your hosting link e.g. http://a4-wilsonwong.glitch.me
+https://a4-francescodm6c.vercel.app/
 
 Include a very brief summary of your project here and what you changed / added to assignment #3.
 
